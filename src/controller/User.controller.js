@@ -125,7 +125,7 @@ res.status(200).cookie("accessToken",accessToken,options)
 })
 
 const logoutHandler=asyncHandler(async(req,res)=>{
-  await User.findByIdAndDelete(req.user._id,
+  await User.findByIdAndUpdate(req.user._id,
     {
       $set:{refreshToken:undefined}
 
