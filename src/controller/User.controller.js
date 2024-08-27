@@ -3,14 +3,11 @@ import{Apierror} from '../utils/Apierror.js'
 import {User} from '../models/User.Models.js';
 import {uploadOnCloudinary} from '../utils/Cloudinary.js'
 import {Apiresponse} from "../utils/Apiresponse.js"
-import jwt from "jsonwebtoken"
-import mongoose from "mongoose";
+
 const generateAccessandRefreshTokens=async(userId)=>{
   try{
     const user=await User.findById(userId)
-    console.log(user.generateAccessToken,"tokens")
-    const accessToken=user.generateAccessToken() 
-    console.log(accessToken,"accesstoken")
+       const accessToken=user.generateAccessToken() 
     const refreshToken=user.generateRefreshToken()
     user.refreshToken=refreshToken
    await user.save({ValidateBeforeSave:false})
