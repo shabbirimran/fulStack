@@ -176,5 +176,54 @@ const refreshAccessToken=asyncHandler(async(req,res)=>{
     throw new Apierror(400,err?.message || "invalid refresh Token")
  }
 })
+const changeCurrentPassword=asyncHandler(async(req,res)=>{
+  const {oldPassword, newPassword,cnfrmPassword} = req.body
+console.log(oldPassword,"old")
+  if(!(newPassword === cnfrmPassword)){
+    throw new Apierror(401,"confirm password is incorrect")
+  }
+  
+try {
+    const user= await User.findById(req.user?._id)
+    console.log(oldPassword)
+    const isPasswordCorrect=await user.isPasswordCorrect(oldPassword)
+    if(!isPasswordCorrect){
+      throw new Apierror(400,"incorrect password")
+  
+    }
+    user.password=newPassword
+    await user.save({validateBeforeSave:false})
+    return res.status(200).json(
+      new Apiresponse(200,{},"Password change successfully")
+    )
+} catch (err) {
+  throw new Apierror(400,err?.meaasge || "incorrect password error")
+}
+})
+const getCurrentUser=asyncHandler(async(req,res)=>{
+  return res.status(200).json(
+    new Apiresponse(200,{user:req.user,},"current user fetch successfully")
+  )
+})
+const updateAccountDetails=asyncHandler(async(req,res)=>{
+  const {fullname,email,username}=req.body
+  if(!(fullname || email || username )){
+    throw new Apierror(404,"empty fields")
+  }
+  const user=await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{
+        fullname,
+        email,
+        username
+      }.select("-password")
+    },
+    {new:true}
 
-export {registerHandler,loginUser,logoutHandler,refreshAccessToken}
+  )
+  return res.status(200).json(
+    new Apiresponse(200,user,"Updated Successfully")
+  )
+}) 
+export {registerHandler,loginUser,logoutHandler,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails}
