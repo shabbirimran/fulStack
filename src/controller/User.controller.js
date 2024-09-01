@@ -4,6 +4,7 @@ import {User} from '../models/User.Models.js';
 import {uploadOnCloudinary} from '../utils/Cloudinary.js'
 import {Apiresponse} from "../utils/Apiresponse.js"
 import jwt from 'jsonwebtoken'
+import mongoose from "mongoose";
 const generateAccessandRefreshTokens=async(userId)=>{
   try{
     const user=await User.findById(userId)
@@ -336,4 +337,52 @@ throw new Apierror(400,"channel does not exists")
     new Apiresponse(200,channel[0],"user channel fetch successfully")
   )
 })
-export {registerHandler,loginUser,logoutHandler,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,updateCoverImage,updateAvatarImage}
+const getWatchHistory=asyncHandler(async(req,res)=>{
+  const user=await User.aggregate([
+    {
+      $match:{
+        _id:new mongoose.Types.ObjectId(req.user_.id),
+      }
+    },
+    {
+      $lookup:{
+        from:"videos",
+        localField:"watchHistory",
+        foreignField:"_id",
+        as:"watchHistory",
+        pipeline:[
+          {
+            $lookup:{
+              from:"users",
+              localField:"owner",
+              foreignField:"_id",
+              as:"owner",
+              pipeline:[
+                {
+                  $project:{
+                      fullname:1,
+                      username:1,
+                      avatar:1
+                  }
+                }
+              ]
+            },
+
+          },
+          {
+            $addFields:{
+              owner:{
+                $first:"$owner"
+              }
+            }
+          }
+          
+        ]
+      }
+    }
+  ])
+  return res.status(200).json(
+    new Apiresponse(200,user[0].watchHistory,"watch history fetch successfully")
+  )
+})
+export {registerHandler,loginUser,logoutHandler,refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails,updateCoverImage,updateAvatarImage,getWatchHistory,getUserChannelProfile}
