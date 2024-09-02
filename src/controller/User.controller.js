@@ -254,6 +254,7 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
 })
 const updateCoverImage=asyncHandler(async(req,res)=>{
   const coverLocalPath=req.file?.path
+
   if(!coverLocalPath){
     throw new Apierror(401,"coverImage file is missing")
   }
@@ -274,6 +275,7 @@ const updateCoverImage=asyncHandler(async(req,res)=>{
 })
 const getUserChannelProfile=asyncHandler(async(req,res)=>{
   const {username}=req.params
+console.log(username,"username")
   if(!username?.trim()){
     throw new Apierror(404,"username is missing")
   }
@@ -290,7 +292,9 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
         foreignField:"channel", 
         as:"subscribers"
       }
+      
     },
+  
     {
       $lookup:{
         from:"subscriptions",
@@ -304,13 +308,14 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
       $addFields:{
         subscriberCount:{
           $size:"$subscribers"
+        
         },
         channelsSubscribedToCount:{
           $size:"$subcribedTo"
         },
         isSubscribed:{
           $cond:{
-            if:{$in:[req.user?._id,"$subsscribers.subscriber"]},
+            if:{$in:[req.user?._id,"$subscribers.subscriber"]},
             then:true,
             else:false
           }
@@ -328,8 +333,10 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
         coverImage:1,
         email:1
       }
-    }
+    },
   ])
+  
+  console.log(channel,"channel")
   if(!channel?.length){
 throw new Apierror(400,"channel does not exists")
   }
@@ -341,7 +348,7 @@ const getWatchHistory=asyncHandler(async(req,res)=>{
   const user=await User.aggregate([
     {
       $match:{
-        _id:new mongoose.Types.ObjectId(req.user_.id),
+        _id:new mongoose.Types.ObjectId(req.user?._id),
       }
     },
     {
@@ -381,6 +388,7 @@ const getWatchHistory=asyncHandler(async(req,res)=>{
       }
     }
   ])
+  console.log(user,"user")
   return res.status(200).json(
     new Apiresponse(200,user[0].watchHistory,"watch history fetch successfully")
   )
